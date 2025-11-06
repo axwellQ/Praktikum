@@ -107,3 +107,132 @@ class Comet:
             (self.x + 5, self.y + self.radius)
         ])
 
+    def is_off_screen(self):
+        return self.y - self.radius > HEIGHT
+
+    def collides_with_ship(self, ship):
+        if not ship.alive:
+            return False
+        ship_rect = pygame.Rect(ship.x - ship.width//2, ship.y, ship.width, ship.height)
+        comet_rect = pygame.Rect(self.x - self.radius, self.y - self.radius, self.radius*2, self.radius*2)
+        return ship_rect.colliderect(comet_rect)
+
+    def collides_with_bullet(self, bullet):
+        bx, by = bullet
+        distance = ((self.x - bx) ** 2 + (self.y - by) ** 2) ** 0.5
+        return distance < self.radius + 5
+
+# Создание кораблей
+ship1 = Ship(WIDTH // 3, ship1_image, pygame.K_a, pygame.K_d, pygame.K_w, pygame.K_s)
+ship2 = Ship(2 * WIDTH // 3, ship2_image, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN)
+
+bullets = []
+comets = []
+
+# Игровые параметры
+comet_spawn_timer = 0
+comet_base_speed = 2
+comet_speed = comet_base_speed
+game_over = False
+score = 0
+font = pygame.font.SysFont(None, 36)
+
+clock = pygame.time.Clock()
+running = True
+
+while running:
+    dt = clock.tick(FPS) / 1000.0
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                running = False
+            if game_over and event.key == pygame.K_r:
+                # Перезапуск
+                ship1 = Ship(WIDTH // 3, ship1_image, pygame.K_a, pygame.K_d, pygame.K_w, pygame.K_s)
+                ship2 = Ship(2 * WIDTH // 3, ship2_image, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN)
+                bullets = []
+                comets = []
+                comet_speed = comet_base_speed
+                game_over = False
+                score = 0
+
+    if game_over:
+        screen.fill(BLACK)
+        text = font.render("Игра окончена! Нажмите R для перезапуска", True, WHITE)
+        screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2))
+        pygame.display.flip()
+        continue
+
+    # Обновление звёзд
+    for star in stars:
+        star[1] += star[3]
+        if star[1] > HEIGHT:
+            star[1] = 0
+            star[0] = random.randint(0, WIDTH)
+
+    keys = pygame.key.get_pressed()
+    ship1.move(keys)
+    ship2.move(keys)
+    ship1.shoot(keys, bullets)
+    ship2.shoot(keys, bullets)
+
+    bullets = [[x, y - 7] for x, y in bullets if y > 0]
+
+    # Генерация комет
+    comet_spawn_timer += dt
+    if comet_spawn_timer > max(0.3, 2.0 - score * 0.01):
+        comets.append(Comet(comet_speed))
+        comet_spawn_timer = 0
+
+    # Обновление комет
+    for comet in comets[:]:
+        comet.move()
+        if comet.is_off_screen():
+            comets.remove(comet)
+            continue
+
+        if comet.collides_with_ship(ship1):
+            ship1.alive = False
+        if comet.collides_with_ship(ship2):
+            ship2.alive = False
+
+        if not (ship1.alive or ship2.alive):
+            game_over = True
+
+    # Проверка попаданий
+    for bullet in bullets[:]:
+        for comet in comets[:]:
+            if comet.collides_with_bullet(bullet):
+                if bullet in bullets:
+                    bullets.remove(bullet)
+                comets.remove(comet)
+                score += 1
+                if score % 10 == 0:
+                    comet_speed = comet_base_speed + score // 10 * 0.5
+                break
+
+    # Отрисовка
+    screen.fill(BLACK)
+
+    for x, y, size, _ in stars:
+        pygame.draw.circle(screen, WHITE, (int(x), int(y)), size)
+
+    ship1.draw(screen)
+    ship2.draw(screen)
+
+    for bullet in bullets:
+        pygame.draw.rect(screen, GREEN, (bullet[0] - 2, bullet[1] - 2, 4, 8))
+
+    for comet in comets:
+        comet.draw(screen)
+
+    score_text = font.render(f"Счёт: {score}", True, WHITE)
+    screen.blit(score_text, (10, 10))
+
+    pygame.display.flip()
+
+pygame.quit()
+sys.exit()
