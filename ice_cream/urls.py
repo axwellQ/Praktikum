@@ -1,5 +1,5 @@
 from django.urls import path
-# from . import views
+from django import views
 
 urlpatterns = [
     path('', views.ice_cream_list, name='ice_cream_list'),  # Обработка адреса ice_cream/

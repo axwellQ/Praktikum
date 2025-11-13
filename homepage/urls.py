@@ -1,3 +1,4 @@
+from django import views
 from django.urls import path
 # from . import views   Импорт view-функций из текущего приложения
 
