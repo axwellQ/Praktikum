@@ -5,7 +5,6 @@ from django.http import HttpResponse
 
 
 def ice_cream_detail(request, pk):
-    # Выводим текст с номером мороженого, переданным в pk
     return HttpResponse(f'Мороженое номер {pk}')
 
 
