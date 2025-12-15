@@ -1,0 +1,18 @@
+import sqlite3
+
+con = sqlite3.connect('db.sqlite')
+cur = con.cursor()
+
+results = cur.execute('''
+    SELECT
+        ic.title,
+        w.title
+    FROM ice_cream ic
+    JOIN wrappers w ON ic.wrapper_id = w.id
+    WHERE w.title LIKE '%праздн%';
+''')
+
+for result in results:
+    print(result)
+
+con.close()
