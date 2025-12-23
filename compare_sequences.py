@@ -9,5 +9,4 @@ def compare_sequences(seq1, seq2):
     else:
         return "Списки равны."
 
-# Вызываем функцию и печатаем результат
 print(compare_sequences(sequence_1, sequence_2))
