@@ -3,10 +3,8 @@ from random import sample
 
 
 def choose_days():
-    # Определяем диапазон дат первой половины месяца (1-15, а не 0-14)
     first_month_half = list(range(1, 16))
 
-    # Выбор трёх случайных чисел:
     random_days = sample(first_month_half, k=3)
     # Cортировка этих чисел по возрастанию:
     sorted_days = sorted(random_days)
